@@ -23,8 +23,3 @@ while (!Raylib.WindowShouldClose() && !Window.shouldClose)
   I += (char)MyInput.keyPressedThisFrame;
 }
 Window.Close(); // manages closing the window
-
-/*
-Note: day 1: ~2 hours
-Note: day 2: (start 1:30) (finish 0:00) (time 0:00)
-*/
