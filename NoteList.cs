@@ -1,268 +1,312 @@
-class NoteListManager
-{/*
+
+class NoteList
+{
   public static rect rec = rect.zero;
-
-  public static List<Note> notes = new List<Note>();
-
-  public static button newNote = new button();
-  public static button deleteMode = new button(); 
-  public static button editMode = new button();
-
-  public static button editButton = new button();
-  public static float deleteButtonTimer = 0;
-
-  public static button EditButton = new button();
-  public static float editButtonTimer = 0;
-
-
-  public static bool inDeleteMode = false;
-  public static bool lastInDeleteMode = false;
-
-  public static bool inEditMode = false;
-  public static bool lastInEditMode = false;
-
-  public static bool openIconSelectBox = false;
-  public static bool openAlterTextBox = false;
-
-  public static void LoadNotes(string path)
-  {
-    string[][] csv = File.ReadAllLines(path).Select(s => s.Split(",", 5)).ToArray();
-    notes = new List<Note>();
-    foreach (string[] note in csv)
-    {
-      note[4] = note[4].Replace("\\n", "\n");
-      notes.Add(new Note(note[0], new vec2(Convert.ToInt32(note[1]),Convert.ToInt32(note[2])), note[3]){bannerCol = note[3]});
-      
-      //notes.Last().bannerCol. = note[3];
-      notes.Last().select.changeRect = true;
-      notes.Last().select.max = 10;
-      notes.Last().select.rectRule = (r,t) => new rect(r.x+t, r.y, r.w,r.h);
-    }
-    newNote.changeRect = true;
-    newNote.max = 2;
-    newNote.rectRule = (r,t) => new rect(r.x-t/2, r.y-t/2, r.w+t);
-
-    deleteMode.changeRect = true;
-    deleteMode.max = 2;
-    deleteMode.rectRule = (r,t) => new rect(r.x-t/2, r.y-t/2, r.w+t);
-
-    editMode.changeRect = true;
-    editMode.max = 2;
-    editMode.rectRule = (r,t) => new rect(r.x-t/2, r.y-t/2, r.w+t);
-
-    selectIconBtn.changeRect = true;
-    selectIconBtn.max = 20;
-    selectIconBtn.rectRule = (r,t) => r;
-    
-    closeIconSelectBoxBtn.changeRect = true;
-    closeIconSelectBoxBtn.max = 20;
-    closeIconSelectBoxBtn.rectRule = (r,t) => r;
-
-    acceptAlterTextBoxBtn.changeRect = true;
-    acceptAlterTextBoxBtn.max = 20;
-    acceptAlterTextBoxBtn.rectRule = (r,t) => r;
-  }
- // public static 
   public static void DrawNoteList()
   {
-    rec = new rect(0,0,env.window.w*.35f, env.window.h);
+    rec = new rect(0,0,300, env.window.h);
     Draw.Rectangle(rec, env.theme.colors["note list bg"]);
     float buffer = 24;
     vec2 pos = rec.xy+buffer;
     vec2 size = new vec2(rec.w-buffer*3.5f, buffer);
     //foreach (Note note in notes)
-    for (int i = 0; i < notes.Count; i++)
+    bool rightClickedOnNote = false;
+    for (int i = 0; i < NoteManager.notes.Count; i++)
     {
       rect icon = new rect(pos.x, pos.y, buffer);
-      rect text = new rect(pos.x + buffer*1.5f, pos.y, size.x, size.y);
+      rect text = new rect(pos.x + buffer*1.5f, pos.y, size.x, buffer);
       float curvature = buffer/4;
-      Draw.RectangleCurved(icon, new rect(curvature,0,curvature,0), notes[i].bannerCol);
-      Draw.RectangleCurved(text, new rect(0,curvature,0,curvature), notes[i].bannerCol);
-      
-      Draw.Icon(notes[i].icon, icon.xy, 0, "fff");
-      Draw.TextAnchored(notes[i].title, new vec2(text.x + curvature, text.y + text.h/2), Anchor.middleLeft, 16, "fff");
-
-      notes[i].select.rec = new rect(text.x+text.w, text.y, buffer);
-      
-      if (Button.AnimatedActionIcon(notes[i].select, new vec2(48,24), Anchor.middleCenter, env.theme.colors["note list bg"],env.theme.colors["note list bg"]).state)
-        NoteContentManager.selectedNoteIndex = i;
-
-      if (deleteButtonTimer != 0)
+      rect totalRec = new rect(0, icon.y, rec.w, icon.h);
+      //notes[i].select.rec = new rect(text.x+text.w, text.y, buffer);
+      if (Utils.MouseOnRec(totalRec))
       {
-        string col = "fff";
-        editButton.rec = new rect(icon.x, icon.y, rec.w-icon.x*2 + buffer/2, icon.h);
-        vec2 binPos = text.xy+new vec2(text.w,0) + new vec2(Utils.Lerp(20, 0, deleteButtonTimer),0);
-        if (Utils.MouseOnRec(editButton.rec)) col = "d13";
-        Draw.Icon(new vec2(120, 48), binPos, 0, Utils.LerpCol(col+"0", col, deleteButtonTimer));
+        if (Input.IsRightMouse(ClickMode.pressed))
+        {
+          selectedNoteIndex = i;
+          menuPos = env.mousePos;
+          rcMenuTimer = 0;
+          rcMenu = true;
+          selectingNote = true;
+          rightClickedOnNote = true;
+        }
+        else if (Input.IsLeftMouse(ClickMode.pressed))
+        {
+          NoteContent.selectedNoteIndex = i;
 
-        //new rect(editIconPos-2,14);
-        if (Button.AnimatedAction(editButton, "0000", "0000").state) notes.RemoveAt(i);
-        //Draw.Icon(new vec2(120, 48), binPos, 0, Utils.LerpCol("d130", "d13", deleteButtonTimer));
-
-        
+        }
+        Draw.Rectangle(totalRec, NoteManager.notes[i].bannerCol+"22");
       }
-      if (editButtonTimer != 0)
+      if (NoteContent.selectedNoteIndex == i)
       {
-        vec2 lerp = new vec2(Utils.Lerp(15, -5, editButtonTimer),0);
-        
-        // icon
-        string col = "fff";
-        icon.w += buffer/3;
-        vec2 editIconPos = icon.xy+new vec2(buffer,0)/*text.xy-new vec2(buffer/2,0) + lerp;
-        if (Utils.MouseOnRec(icon)) col = "07c";
-        Draw.Icon(new vec2(96, 48), editIconPos, 0, Utils.LerpCol(col+"0", col, editButtonTimer));
-        editButton.rec = icon;//new rect(editIconPos-2,14);
-        if (Button.AnimatedAction(editButton, "0000", "0000").state)
-        {
-          openIconSelectBox = true;
-          NoteIndexToChange = i;
-        }
-
-        // text
-        col = "fff";
-        text.w += buffer/3;
-        vec2 editTextPos = text.xy+new vec2(text.w-buffer/3,0) + lerp;
-        if (Utils.MouseOnRec(text)) col = "07c";
-        Draw.Icon(new vec2(96, 48), editTextPos, 0, Utils.LerpCol(col+"0", col, editButtonTimer));
-        editButton.rec = text;
-        if (Button.AnimatedAction(editButton, "0000", "0000").state)
-        {
-          openAlterTextBox = true;
-          NoteIndexToChange = i;
-          newTitle = notes[NoteIndexToChange].title;
-          pointer = newTitle.Length-1;
-        }
-
+        Raylib.DrawRectangleGradientH(
+          (int)(text.x+text.w-curvature), 
+          (int)text.y+Window.menuBarHeight, 
+          (int)(buffer+curvature), 
+          (int)(text.h),Utils.HexToRGB(NoteManager.notes[i].bannerCol), Utils.HexToRGB(NoteManager.notes[i].bannerCol+"00")
+        );
       }
+      Draw.RectangleCurved(icon, new rect(curvature,0,curvature,0), NoteManager.notes[i].bannerCol);
+      Draw.RectangleCurved(text, new rect(0,curvature,0,curvature), NoteManager.notes[i].bannerCol);
+      
+      Draw.Icon(NoteManager.notes[i].icon, icon.xy, 0, env.theme.colors["icons"]);
+      Draw.TextAnchored(NoteManager.notes[i].title, new vec2(text.x + curvature, text.y + text.h/2), Anchor.middleLeft, 16, env.theme.colors["text"]);
+      
       pos.y += buffer*1.5f;
     }
-    newNote.rec = new rect((rec.w-buffer)/2 - buffer*1.5f, pos.y, buffer);
-    deleteMode.rec = new rect((rec.w-buffer)/2, pos.y, buffer);
-    editMode.rec = new rect((rec.w-buffer)/2 + buffer*1.5f, pos.y, buffer);
+    if (!rightClickedOnNote && Input.IsRightMouse(ClickMode.pressed))
+    {
+      menuPos = env.mousePos;
+      rcMenuTimer = 0;
+      rcMenu = true;
+      selectingNote = false;
+    }
+    RightClickMenu();
+    EditNoteMenu();
+  }
+  public static Func<rect, float, rect> MenuLambda = (r, t) => new rect(r.x, r.y, t, r.h);
+  public static int selectedNoteIndex = -1;
+  public static vec2 menuPos = vec2.zero;
+  public static float rcMenuTimer = 0; // right click menu
+  public static button rcBtnA = new button() {changeRect = true, rectRule = MenuLambda};
+  public static button rcBtnB = new button() {changeRect = true, rectRule = MenuLambda};
+  public static button rcBtnC = new button() {changeRect = true, rectRule = MenuLambda};
+  public static Note? lastCopiedNote = null;
+  
+  public static bool editNoteMenu = false;
+  public static bool rcMenu = false;
+  public static bool selectingNote = false;
+  public static void RightClickMenu()
+  {
+    if (!rcMenu)
+    {
+      rcMenuTimer = Math.Max(rcMenuTimer-Raylib.GetFrameTime() * 5, 0);
+      return;
+    }
+    rcMenuTimer = Math.Min(rcMenuTimer+Raylib.GetFrameTime() * 5, 1);
+
+    rect rec = new rect(menuPos.x,menuPos.y, 100,48+(selectingNote?24:0));
+    Draw.RectangleShadow(rec, Utils.LerpCol("0000","0008",rcMenuTimer));
+    Draw.Rectangle(rec,Utils.LerpCol(env.theme.colors["input menus"]+"00",env.theme.colors["input menus"],rcMenuTimer));
+    Draw.RectangleOutline(rec, -1, false, env.theme.colors["accent"]);
     
-    bool createNewNote = iconButton(newNote, new vec2(96, 0), false);
-    inDeleteMode = iconButton(deleteMode, new vec2(120, 0));
-    inEditMode = iconButton(editMode, new vec2(120, 24));
-    if (createNewNote) notes.Add(new Note("hello", new vec2(Convert.ToInt32(0),Convert.ToInt32(24)), "gurk"));
+    if (selectingNote)
+    {
+      bool copy = false;
+      bool delete = false;
+      #region edit button
+        rcBtnA.rec = new rect(rec.x, rec.y, rec.w, 24);
+        rcBtnA.max = rec.w;
+        string editBtnAccentCol = Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],rcBtnA.timer);
+        editNoteMenu = Button.AnimatedAction(rcBtnA).state;
+        Draw.Icon(MyIcons.penInCircle, rcBtnA.rec.xy, 0, editBtnAccentCol);
+        Draw.TextAnchored("edit", new vec2(rcBtnA.rec.x+24,rcBtnA.rec.y+rcBtnA.rec.h/2), Anchor.middleLeft, 18, editBtnAccentCol);
+      #endregion
 
-    if (inDeleteMode && !lastInDeleteMode) editMode.currentState.state = false;
-    else if (inEditMode && !lastInEditMode) deleteMode.currentState.state = false;
+      #region copy button
+        rcBtnB.rec = new rect(rec.x, rec.y+24, rec.w, 24);
+        rcBtnB.max = rec.w;
+        string copyBtnAccentCol = Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],rcBtnB.timer);
+        copy = Button.AnimatedAction(rcBtnB).state;
+        Draw.Icon(MyIcons.twoSquares, rcBtnB.rec.xy, 0, copyBtnAccentCol);
+        Draw.TextAnchored("copy", new vec2(rcBtnB.rec.x+24,rcBtnB.rec.y+rcBtnB.rec.h/2), Anchor.middleLeft, 18, copyBtnAccentCol);
+      #endregion
 
-    if (deleteMode.currentState.state) deleteButtonTimer = Math.Min(deleteButtonTimer+Raylib.GetFrameTime() * deleteMode.speed, 1);
-    else deleteButtonTimer = Math.Max(deleteButtonTimer-Raylib.GetFrameTime() * deleteMode.speed, 0);
+      #region delete button
+        rcBtnC.rec = new rect(rec.x, rec.y+48, rec.w, 24);
+        rcBtnC.max = rec.w;
+        string deleteBtnAccentCol = Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent B"],rcBtnC.timer);
+        delete = Button.AnimatedAction(rcBtnC).state;
+        Draw.Icon(MyIcons.xInCircle, rcBtnC.rec.xy, 0, deleteBtnAccentCol);
+        Draw.TextAnchored("delete", new vec2(rcBtnC.rec.x+24,rcBtnC.rec.y+rcBtnC.rec.h/2), Anchor.middleLeft, 18, deleteBtnAccentCol);
+      #endregion
+      if (editNoteMenu)
+      {
+        //menuPos = env.mousePos;
+        editMenuTimer = 0;
+        editNoteMenu = true;
+        newNote = NoteManager.notes[selectedNoteIndex];
+        titlePointer = newNote.title.Length-1;
+        bannerPointer = newNote.bannerCol.Length-1;
+        rcMenu = false;
+      }
+      if (copy)
+      {
+        lastCopiedNote = NoteManager.notes[selectedNoteIndex];
+        rcMenu = false;
+      }
+      if (delete)
+      {
+        NoteManager.notes.RemoveAt(selectedNoteIndex);
+        rcMenu = false;
+      }
+    }
+    else
+    {
+      bool paste = false;
+      #region new note button
+        rcBtnA.rec = new rect(rec.x, rec.y, rec.w, 24);
+        rcBtnA.max = rec.w;
+        string newNoteBtnAccentCol = Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],rcBtnA.timer);
+        editNoteMenu = Button.AnimatedAction(rcBtnA).state;
+        Draw.Icon(MyIcons.plusInCircle, rcBtnA.rec.xy, 0, newNoteBtnAccentCol);
+        Draw.TextAnchored("new note", new vec2(rcBtnA.rec.x+24,rcBtnA.rec.y+rcBtnA.rec.h/2), Anchor.middleLeft, 18, newNoteBtnAccentCol);
+      #endregion
 
-    if (editMode.currentState.state) editButtonTimer = Math.Min(editButtonTimer+Raylib.GetFrameTime() * editMode.speed, 1);
-    else editButtonTimer = Math.Max(editButtonTimer-Raylib.GetFrameTime() * editMode.speed, 0);
-    
-    lastInDeleteMode = inDeleteMode;
-    lastInEditMode = inEditMode;
-
-    if (openIconSelectBox) iconSelectBox();
-    if (openAlterTextBox) alterTextBox();
+      #region paste button
+        rcBtnB.rec = new rect(rec.x, rec.y+24, rec.w, 24);
+        rcBtnB.max = rec.w;
+        string copyBtnAccentCol = Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],rcBtnB.timer);
+        paste = Button.AnimatedAction(rcBtnB).state;
+        Draw.Icon(MyIcons.twoSquares, rcBtnB.rec.xy, 0, copyBtnAccentCol);
+        Draw.TextAnchored("paste", new vec2(rcBtnB.rec.x+24,rcBtnB.rec.y+rcBtnB.rec.h/2), Anchor.middleLeft, 18, copyBtnAccentCol);
+      #endregion
+      if (editNoteMenu)
+      {
+        //menuPos = env.mousePos;
+        NoteManager.notes.Add(new Note());
+        editMenuTimer = 0;
+        editNoteMenu = true;
+        newNote = NoteManager.notes.Last();
+        selectedNoteIndex = NoteManager.notes.Count-1;
+        titlePointer = newNote.title.Length-1;
+        bannerPointer = newNote.bannerCol.Length-1;
+        rcMenu = false;
+      }
+      if (paste && lastCopiedNote.HasValue)
+      {
+        NoteManager.notes.Add(lastCopiedNote.Value);
+        rcMenu = false;
+      }
+    }
+    if (!Utils.MouseOnRec(rec) && Input.IsLeftMouse(ClickMode.pressed)) rcMenu = false;
   }
 
-  public static button closeIconSelectBoxBtn = new button();
-  public static button selectIconBtn = new button();
-  public static int NoteIndexToChange = 0;
-  public static void iconSelectBox()
+  static float editMenuTimer = 0;
+  static Func<rect, float, rect> EditMenuLambda = (r, t) => new rect(r.x, r.y, r.w, t);
+  static Func<rect, float, rect> EditMenuTabLambda = (r, t) => new rect(r.x+r.w - t, r.y, t, r.h);
+  static button acceptBtn = new button() {changeRect = true, rectRule = EditMenuLambda};
+  static button cancelBtn = new button() {changeRect = true, rectRule = EditMenuLambda};
+
+  static button editIconTab = new button() {changeRect = true, rectRule = EditMenuTabLambda};
+  static button editTitleTab = new button() {changeRect = true, rectRule = EditMenuTabLambda};
+  static button editBannerTab = new button() {changeRect = true, rectRule = EditMenuTabLambda};
+  
+  static int editMode = 1;
+  static Note newNote = new Note();
+  static int titlePointer = 0;
+  static int bannerPointer = 0;
+  public static void EditNoteMenu()
   {
-    float infoHeight = 18;
-    vec2 newIcon = notes[NoteIndexToChange].icon;
-    vec2 size = new vec2(Window.iconSheet.width, Window.iconSheet.height+infoHeight);
-    rect rec = new rect(env.window.wh/2 - size/2, size.x, size.y);
-    closeIconSelectBoxBtn.rec = new rect(rec.x+rec.w-infoHeight,rec.y,infoHeight);
-    Draw.Rectangle(rec, "333");
-    openIconSelectBox = !Button.AnimatedActionIcon(closeIconSelectBoxBtn, Icons.close, Anchor.middleCenter, "d130","d134").state;
-    Draw.RectangleOutline(rec, 1, false, "07c");
-    Draw.Line(new vec2(rec.x,rec.y+infoHeight), new vec2(rec.x+rec.w,rec.y+infoHeight), 1, "07c");
-    Draw.Texture(Window.iconSheet, new rect(0,0,size.x,size.y-infoHeight), new rect(rec.x, rec.y+infoHeight, rec.w, rec.h-infoHeight), 0, "fff");
-    Draw.TextAnchored("select a new icon", rec.xy+infoHeight/2, Anchor.middleLeft, 16, "fff");
-    
-    for (int y = 0; y < Window.iconSheet.height; y+=24)
+    if (!editNoteMenu)
     {
-      for (int x = 0; x < Window.iconSheet.width; x+=24)
+      editMenuTimer = Math.Max(editMenuTimer-Raylib.GetFrameTime() * 5, 0);
+      return;
+    }
+    editMenuTimer = Math.Min(editMenuTimer+Raylib.GetFrameTime() * 5, 1);
+    vec2 size = new vec2(NoteList.rec.w + 48, 168);
+    rect rec = new rect((env.window.wh-size)/2, size.x, size.y);
+
+    Draw.RectangleShadow(rec, Utils.LerpCol("0000","0006",editMenuTimer));
+    Draw.Rectangle(rec,Utils.LerpCol(env.theme.colors["input menus"]+"00",env.theme.colors["input menus"],editMenuTimer));
+    Draw.RectangleOutline(rec, -1, false, env.theme.colors["accent"]);
+    Draw.Icon(MyIcons.paintersPalette, rec.xy, 0, env.theme.colors["icons"]);
+    Draw.TextAnchored("note appearance editor", new vec2(rec.x+36,rec.y+12), Anchor.middleLeft, 18, env.theme.colors["text"]);
+    Draw.Line(new vec2(rec.x, rec.y+24.5f), new vec2(rec.x+rec.w, rec.y+24.5f), 1, env.theme.colors["accent"]);
+    Draw.TextAnchored("preview", new vec2(rec.x + 3, rec.y+rec.h-48), Anchor.middleLeft, 16, env.theme.colors["accent"]);
+    Draw.Line(new vec2(rec.x + Utils.TextSize("preview", 16).x+6, rec.y+rec.h-48.5f), new vec2(rec.x+rec.w, rec.y+rec.h-48.5f), 1, env.theme.colors["accent"]);
+    bool accept = false;
+    bool cancel = false;
+    #region accept button
+      acceptBtn.rec = new rect(rec.x+rec.w-48, rec.y, 24);
+      acceptBtn.max = 24;
+      string acceptBtnIconCol = Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],acceptBtn.timer);
+      string acceptBtnTextCol = Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],acceptBtn.timer);
+      accept = Button.AnimatedAction(acceptBtn).state;
+      Draw.Icon(MyIcons.tickInCircle, acceptBtn.rec.xy, 0, acceptBtnIconCol);
+      Draw.TextAnchored("accept", new vec2(acceptBtn.rec.x+12,acceptBtn.rec.y), Anchor.bottomCenter, 18, acceptBtnTextCol);
+    #endregion
+
+    #region cancel button
+      cancelBtn.rec = new rect(rec.x+rec.w-24, rec.y, 24);
+      cancelBtn.max = 24;
+      string cancelBtnIconCol = Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent B"],cancelBtn.timer);
+      string cancelBtnTextCol = Utils.LerpCol(env.theme.colors["accent B"]+"00",env.theme.colors["accent B"],cancelBtn.timer);
+      cancel = Button.AnimatedAction(cancelBtn).state;
+      Draw.Icon(MyIcons.xInCircle, cancelBtn.rec.xy, 0, cancelBtnIconCol);
+      Draw.TextAnchored("cancel", new vec2(cancelBtn.rec.x+30,cancelBtn.rec.y+12), Anchor.middleLeft, 18, cancelBtnTextCol);
+    #endregion
+    Draw.Line(new vec2(rec.x+rec.w-24.5f, rec.y+24), new vec2(rec.x+rec.w-24.5f, rec.y+rec.h-48), 1, env.theme.colors["accent"]);
+
+    #region tabs
+      #region edit icon tab
+        editIconTab.rec = new rect(rec.x+rec.w-24, rec.y+36, 24);
+        editIconTab.max = 24;
+        if (Button.AnimatedAction(editIconTab).state) editMode = 0;
+        Draw.Icon(MyIcons.iconsInCircle, editIconTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editIconTab.timer));
+        Draw.TextAnchored("icon", new vec2(editIconTab.rec.x+30,editIconTab.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],editIconTab.timer));
+      #endregion
+      #region edit title tab
+        editTitleTab.rec = new rect(rec.x+rec.w-24, rec.y+60, 24);
+        editTitleTab.max = 24;
+        if (Button.AnimatedAction(editTitleTab).state) editMode = 1;
+        Draw.Icon(MyIcons.AInCircle, editTitleTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editTitleTab.timer));
+        Draw.TextAnchored("title", new vec2(editTitleTab.rec.x+30,editTitleTab.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],editTitleTab.timer));
+      #endregion
+      #region edit banner tab
+        editBannerTab.rec = new rect(rec.x+rec.w-24, rec.y+84, 24);
+        editBannerTab.max = 24;
+        if (Button.AnimatedAction(editBannerTab).state) editMode = 2;
+        Draw.Icon(MyIcons.paintBucketInCircle, editBannerTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editBannerTab.timer));
+        Draw.TextAnchored("banner color", new vec2(editBannerTab.rec.x+30,editBannerTab.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],editBannerTab.timer));
+      #endregion
+    #endregion
+   
+    if (editMode == 0) // icon
+    {
+      vec2 pos = new vec2(rec.x + ((rec.w-24)-Window.iconSheet.width)/2,rec.y+36);
+      for (float y = pos.y; y < pos.y + Window.iconSheet.height; y+=24)
       {
-        selectIconBtn.rec = new rect(new vec2(rec.x+x,rec.y+y+infoHeight), 24,24);
-        if (Button.AnimatedAction(selectIconBtn, "fff0","fffa").state)
+        for (float x = pos.x; x < pos.x + Window.iconSheet.width; x+=24)
         {
-          Note newNote = notes[NoteIndexToChange];
-          newNote.icon = new vec2(x,y);
-          notes[NoteIndexToChange] = newNote;
-          openIconSelectBox = false;
+          rect r = new rect(x,y,24);
+          if (Utils.MouseOnRec(r))
+          {
+            if (Input.IsLeftMouse(ClickMode.pressed)) newNote.icon = r.xy-pos;
+            Draw.Rectangle(r, env.theme.colors["action btn on"]);
+          }
         }
       }
+      Draw.Texture(Window.iconSheet, pos, 0, env.theme.colors["icons"]);
     }
-  }
-  public static int pointer = -2;
-  public static button cancelAlterTextBoxBtn = new button();
-  public static button acceptAlterTextBoxBtn = new button();
-  public static string newTitle = "";
-  public static void alterTextBox()
-  {
-    //float infoHeight = 18;
-    vec2 size = new vec2(232, 32);
-    rect rec = new rect(env.window.wh/2 - size/2, size.x, size.y);
-    Draw.Rectangle(rec, "333");
-    
-    int key = Raylib.GetCharPressed();
-    // Check if more characters have been pressed on the same frame
-    while (key > 0)
+    else if (editMode == 1) // title
     {
-      // NOTE: Only allow keys in range [32..125]
-      if ((key >= 32) && (key <= 125) && (newTitle.Length < 26))
-      {
-        //newTitle += (char)key;
-        newTitle = newTitle.Insert(pointer+1, ""+(char)key);
-        pointer++;
-      }
-
-      key = Raylib.GetCharPressed();  // Check next character in the queue
+      
+      MyInput.TextBox(new vec2(rec.x+12, rec.y+56), ref newNote.title, ref titlePointer, 30);
+      // text box -_-
     }
-
-    if (MyInput.keyPressedThisFrame == (int)KeyboardKey.KEY_BACKSPACE && newTitle.Length > 0)
+    else if (editMode == 2) // banner col
     {
-      newTitle = newTitle.Remove(pointer,1);
-      pointer--;
+      MyInput.TextBox(new vec2(rec.x+12, rec.y+56), ref newNote.bannerCol, ref bannerPointer, 9);
+      //if (newNote.bannerCol.Replace("#","").Length == 7) newNote.bannerCol += newNote.bannerCol.Substring(7,1);
     }
-    if (MyInput.keyPressedThisFrame == (int)KeyboardKey.KEY_LEFT && pointer > -1) pointer--;
-    if (MyInput.keyPressedThisFrame == (int)KeyboardKey.KEY_RIGHT && pointer < newTitle.Length-1) pointer++;
-    if (MyInput.keyPressedThisFrame == (int)KeyboardKey.KEY_UP) pointer=newTitle.Length-1;
-    if (MyInput.keyPressedThisFrame == (int)KeyboardKey.KEY_DOWN) pointer=-1;
 
-    Draw.TextAnchored(newTitle, new vec2(rec.x+5, rec.y+rec.h/2), Anchor.middleLeft, 16, "fff");
-    vec2 pointerPos = Utils.TextSize(Window.font, new string(newTitle.AsSpan(0, pointer+1)), 16);
-
-    Draw.Line(new vec2(rec.x +5+ pointerPos.x, rec.y + (rec.h-18)/2), new vec2(rec.x +5+ pointerPos.x, rec.y + 25), 1, "07c");
-
-    acceptAlterTextBoxBtn.max = 20;
-    cancelAlterTextBoxBtn.max = 20;
-
-    acceptAlterTextBoxBtn.rec = new rect(rec.x+rec.w-64,rec.y,32);
-    bool accept = Button.AnimatedActionIcon(acceptAlterTextBoxBtn, new vec2(72,24), Anchor.middleCenter, "fff0", "fff3").state;
-    cancelAlterTextBoxBtn.rec = new rect(rec.x+rec.w-32,rec.y,32);
-    bool cancel = Button.AnimatedActionIcon(cancelAlterTextBoxBtn, Icons.close, Anchor.middleCenter, "d130", "d134").state;
-    Draw.RectangleOutline(rec, 1, false, "07c");
-
-    if (accept)
+    #region note preview
+      vec2 previewPos = new vec2(rec.x+24, rec.y+rec.h-36);
+      rect icon = new rect(previewPos.x, previewPos.y, 24);
+      rect text = new rect(previewPos.x + 24*1.5f, previewPos.y, rec.w-84, 24);
+      float curvature = 6;
+      Draw.RectangleCurved(icon, new rect(curvature,0,curvature,0), newNote.bannerCol);
+      Draw.RectangleCurved(text, new rect(0,curvature,0,curvature), newNote.bannerCol);
+      
+      Draw.Icon(newNote.icon, icon.xy, 0, env.theme.colors["icons"]);
+      Draw.TextAnchored(newNote.title, new vec2(text.x + curvature, text.y + text.h/2), Anchor.middleLeft, 16, env.theme.colors["text"]);
+    #endregion
+    if (accept) NoteManager.notes[selectedNoteIndex] = newNote;
+    if (cancel || accept)
     {
-      Note newNote = notes[NoteIndexToChange];
-      newNote.title = newTitle;
-      notes[NoteIndexToChange] = newNote;
+      editNoteMenu = false;
+      editMode = 1;
     }
-    if (cancel || accept) openAlterTextBox = false;
+    //if (!Utils.MouseOnRec(rec) && Input.IsLeftMouse(ClickMode.pressed) && editMenuTimer >= 1) editNoteMenu = false;
   }
-
-  static bool iconButton(button b, vec2 icon, bool toggle = true)
-  {
-    //editMode.rec = new rect((rec.w-buffer)/2 + buffer*1.5f, pos.y, buffer);
-
-    bool state = false;
-    if (toggle) state = Button.AnimatedToggle(b, "fff0", "fff0", "fff0").state;
-    else state = Button.AnimatedAction(b, "fff0", "fff0").state;
-
-    string iconCol = Utils.LerpCol("fff", "07c", b.timer);
-    if (state) iconCol = "07c";
-    Draw.Icon(icon, b.rec.xy, 0, iconCol);
-    return state;
-  }
-*/}
+}

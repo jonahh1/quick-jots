@@ -74,6 +74,42 @@ class MyInput
 
     return ret;
   }
+  public static void TextBox(vec2 pos, ref string str, ref int pointer, int maxStrLen)
+  {
+    int fontSize = 18;
+    rect rec = new rect(pos, Utils.TextSize(Window.font, new string('W',maxStrLen), fontSize).x + 10, 32);
+    Draw.Rectangle(rec, "333");
+    Draw.RectangleOutline(rec, -1, false, env.theme.colors["accent"]);
+
+    int key = Raylib.GetCharPressed();
+    // Check if more characters have been pressed on the same frame
+    while (key > 0)
+    {
+      // NOTE: Only allow keys in range [32..125]
+      if ((key >= 32) && (key <= 125) && (str.Length < maxStrLen))
+      {
+        str = str.Insert(pointer+1, ""+(char)key);
+        pointer++;
+      }
+
+      key = Raylib.GetCharPressed();  // Check next character in the queue
+    }
+
+    if (keyPressedThisFrame == (int)KeyboardKey.KEY_BACKSPACE && str.Length > 0)
+    {
+      str = str.Remove(pointer,1);
+      pointer--;
+    }
+    if (keyPressedThisFrame == (int)KeyboardKey.KEY_LEFT && pointer > -1) pointer--;
+    if (keyPressedThisFrame == (int)KeyboardKey.KEY_RIGHT && pointer < str.Length-1) pointer++;
+    if (keyPressedThisFrame == (int)KeyboardKey.KEY_UP) pointer=str.Length-1;
+    if (keyPressedThisFrame == (int)KeyboardKey.KEY_DOWN) pointer=-1;
+
+    Draw.TextAnchored(str, new vec2(rec.x+5, rec.y+rec.h/2), Anchor.middleLeft, fontSize, "fff");
+    vec2 pointerPos = Utils.TextSize(Window.font, new string(str.AsSpan(0, pointer+1)), fontSize);
+
+    Draw.Line(new vec2(rec.x +5+ pointerPos.x, rec.y + (rec.h-18)/2), new vec2(rec.x +5+ pointerPos.x, rec.y + 25), 1, "07c");
+  }
   public static T[] Concatenate<T>(T[] first, T[] second)
   {
     if (first == null) return second;
