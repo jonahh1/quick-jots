@@ -4,6 +4,7 @@
     "background": "181818",
     "icons": "fff",
     "text": "fff",
+    "accent": "07c",
 
     "toggle btn off": "0000",
     "toggle btn hover": "4d4d4d",
@@ -13,11 +14,6 @@
     "action btn on": "4d4d4d",
 
     "note list bg": "242424",
-
-    "tab bar": "242424",
-    "selected tab": "181818",
-    "other tabs": "2d2d2d",
-    "tab hover": "484848",
 
     "input menus": "323232",
 

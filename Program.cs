@@ -1,6 +1,6 @@
 // initialize window
 Window.New(new vec2(800, 450), "quick-jots", 16, 24);
-NoteListManager.LoadNotes("test.csv");
+NoteManager.LoadNotes("test.csv");
 Raylib.SetTargetFPS(30);
 // updates each frame
 string I = "";
@@ -15,8 +15,8 @@ while (!Raylib.WindowShouldClose() && !Window.shouldClose)
     // draw some text in the center of the screen
     //Draw.TextAnchored("Hello World!", new vec2(env.window.w/2,env.window.h/2), Anchor.middleCenter, 32, env.theme.colors["text"]);
     //NoteContentManager.DrawSelectedNote();
-    NoteContentManager.DrawSelectedNote();
-    NoteListManager.DrawNoteList();
+    //NoteContentManager.DrawSelectedNote();
+    NoteManager.DrawNoteList();
   #endregion
   Window.EndFrame();
   Utils.UpdateCursor(); // updates the mouse cursor image

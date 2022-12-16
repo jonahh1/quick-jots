@@ -1,6 +1,6 @@
 class NoteContentManager
 {
-  public static int selectedNoteIndex = -1;
+  /*public static int selectedNoteIndex = -1;
   public static void DrawSelectedNote()
   {
     float buffer = 24;
@@ -15,5 +15,5 @@ class NoteContentManager
     Draw.TextAnchored(note.title, rec.xy+buffer, Anchor.middleLeft, 32, "fff");
     //Draw.Text(note.content, rec.xy, 18, "fff");
 
-  }
+  }*/
 }

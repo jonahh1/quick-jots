@@ -1,28 +1,5 @@
-struct Note
-{
-  public string title = "new note";
-  public vec2 icon = new vec2(48,24);
-  public string bannerCol = "568c6a";
-  public string content = "";
-
-  public Note(){}
-  public Note(string title, vec2 icon)
-  {
-    this.title = title;
-    this.icon = icon;
-  }
-  public Note(string title, vec2 icon, string content)
-  {
-    this.title = title;
-    this.icon = icon;
-    this.content = content;
-  }
-
-  public button select = new button();
-}
-
 class NoteListManager
-{
+{/*
   public static rect rec = rect.zero;
 
   public static List<Note> notes = new List<Note>();
@@ -131,7 +108,7 @@ class NoteListManager
         // icon
         string col = "fff";
         icon.w += buffer/3;
-        vec2 editIconPos = icon.xy+new vec2(buffer,0)/*text.xy-new vec2(buffer/2,0)*/ + lerp;
+        vec2 editIconPos = icon.xy+new vec2(buffer,0)/*text.xy-new vec2(buffer/2,0) + lerp;
         if (Utils.MouseOnRec(icon)) col = "07c";
         Draw.Icon(new vec2(96, 48), editIconPos, 0, Utils.LerpCol(col+"0", col, editButtonTimer));
         editButton.rec = icon;//new rect(editIconPos-2,14);
@@ -273,48 +250,6 @@ class NoteListManager
       notes[NoteIndexToChange] = newNote;
     }
     if (cancel || accept) openAlterTextBox = false;
-    /*btn.rec = new rect(rec.x+rec.w-64,rec.y,32);
-    bool accept = Button.AnimatedActionIcon(btn, new vec2(72, 24), Anchor.middleCenter, "fff0", "fff8").state;*/
-
-    /*
-    if (MyInput.keyPressedThisFrame != 0)
-    {
-      Note newNote = notes[NoteIndexToChange];
-      newNote.title += (char)(MyInput.keyPressedThisFrame+32);
-      notes[NoteIndexToChange] = newNote;
-
-
-    Note newNote = notes[NoteIndexToChange];
-    newNote.title = newTitle;
-    notes[NoteIndexToChange] = newNote;
-
-    }*/
-
-    /*vec2 newIcon = notes[NoteIndexToChangeIcon].icon;
-    vec2 size = new vec2(Window.iconSheet.width, Window.iconSheet.height+infoHeight);
-    rect rec = new rect(env.window.wh/2 - size/2, size.x, size.y);
-    closeIconSelectBoxBtn.rec = new rect(rec.x+rec.w-infoHeight,rec.y,infoHeight);
-    Draw.Rectangle(rec, "333");
-    openIconSelectBox = !Button.AnimatedActionIcon(closeIconSelectBoxBtn, Icons.close, Anchor.middleCenter, "d130","d134").state;
-    Draw.RectangleOutline(rec, 1, false, "07c");
-    Draw.Line(new vec2(rec.x,rec.y+infoHeight), new vec2(rec.x+rec.w,rec.y+infoHeight), 1, "07c");
-    Draw.Texture(Window.iconSheet, new rect(0,0,size.x,size.y-infoHeight), new rect(rec.x, rec.y+infoHeight, rec.w, rec.h-infoHeight), 0, "fff");
-    Draw.TextAnchored("select a new icon", rec.xy+infoHeight/2, Anchor.middleLeft, 16, "fff");
-    
-    for (int y = 0; y < Window.iconSheet.height; y+=24)
-    {
-      for (int x = 0; x < Window.iconSheet.width; x+=24)
-      {
-        selectIconBtn.rec = new rect(new vec2(rec.x+x,rec.y+y+infoHeight), 24,24);
-        if (Button.AnimatedAction(selectIconBtn, "fff0","fffa").state)
-        {
-          Note newNote = notes[NoteIndexToChangeIcon];
-          newNote.icon = new vec2(x,y);
-          notes[NoteIndexToChangeIcon] = newNote;
-          openIconSelectBox = false;
-        }
-      }
-    }*/
   }
 
   static bool iconButton(button b, vec2 icon, bool toggle = true)
@@ -330,4 +265,4 @@ class NoteListManager
     Draw.Icon(icon, b.rec.xy, 0, iconCol);
     return state;
   }
-}
+*/}
