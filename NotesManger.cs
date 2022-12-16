@@ -129,7 +129,7 @@ class NoteManager
   public static int selectedNoteIndex = -1;
   public static vec2 menuPos = vec2.zero;
   public static float menuTimer = 0;
-  public static button editBtn = new button() {rectRule = (r,t) => r;}
+  public static button editBtn = new button() {rectRule = (r,t) => r};
   public static void RightClickMenu()
   {
     if (selectedNoteIndex == -1)
