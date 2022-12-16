@@ -1,0 +1,3 @@
+D:\programing\vscode\quick-jots\bin\Debug\net6.0-windows\win-x64\publish\quick-jots.pdb
+D:\programing\vscode\quick-jots\bin\Debug\net6.0-windows\win-x64\publish\raylib.dll
+D:\programing\vscode\quick-jots\bin\Debug\net6.0-windows\win-x64\publish\quick-jots.exe
