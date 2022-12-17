@@ -1,0 +1,25 @@
+{
+  "colors": {
+    "menu bar": "fff",
+    "background": "aaa",
+    "icons": "000",
+    "text": "000",
+    "accent": "07c",
+    "accent B": "d13",
+
+    "toggle btn off": "0000",
+    "toggle btn hover": "4d4d4d",
+    "toggle btn on": "fff1",
+
+    "action btn off": "d4d4d400",
+    "action btn on": "d4d4d4",
+
+    "note list bg": "888",
+
+    "input menus": "c0c0c0",
+
+    "workspace item bg": "242424",
+    "workspace item bar": "323232",
+    "":""
+  }
+}

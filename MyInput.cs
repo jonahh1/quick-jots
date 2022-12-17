@@ -78,7 +78,7 @@ class MyInput
   {
     int fontSize = 18;
     rect rec = new rect(pos, Utils.TextSize(Window.font, new string('W',maxStrLen), fontSize).x + 10, 32);
-    Draw.Rectangle(rec, "333");
+    Draw.Rectangle(rec, env.theme.colors["input menus"]);
     Draw.RectangleOutline(rec, -1, false, env.theme.colors["accent"]);
 
     int key = Raylib.GetCharPressed();
@@ -105,10 +105,10 @@ class MyInput
     if (keyPressedThisFrame == (int)KeyboardKey.KEY_UP) pointer=str.Length-1;
     if (keyPressedThisFrame == (int)KeyboardKey.KEY_DOWN) pointer=-1;
 
-    Draw.TextAnchored(str, new vec2(rec.x+5, rec.y+rec.h/2), Anchor.middleLeft, fontSize, "fff");
+    Draw.TextAnchored(str, new vec2(rec.x+5, rec.y+rec.h/2), Anchor.middleLeft, fontSize, env.theme.colors["text"]);
     vec2 pointerPos = Utils.TextSize(Window.font, new string(str.AsSpan(0, pointer+1)), fontSize);
 
-    Draw.Line(new vec2(rec.x +5+ pointerPos.x, rec.y + (rec.h-18)/2), new vec2(rec.x +5+ pointerPos.x, rec.y + 25), 1, "07c");
+    Draw.Line(new vec2(rec.x +5+ pointerPos.x, rec.y + (rec.h-18)/2), new vec2(rec.x +5+ pointerPos.x, rec.y + 25), 1, env.theme.colors["accent"]);
   }
   public static T[] Concatenate<T>(T[] first, T[] second)
   {

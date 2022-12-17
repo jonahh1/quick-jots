@@ -2,9 +2,8 @@
 Window.New(new vec2(800, 450), "quick-jots", 16, 24);
 NoteManager.LoadNotes("test.csv");
 Raylib.SetTargetFPS(30);
+
 // updates each frame
-string I = "hello";
-int p = 2;
 while (!Raylib.WindowShouldClose() && !Window.shouldClose)
 {
   Window.UpdateVariables();

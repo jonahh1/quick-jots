@@ -1,10 +1,10 @@
 {
   "colors": {
-    "menu bar": "FFE775",
-    "background": "45046A",
-    "icons": "45046A",
-    "text": "45046A",
-    "accent": "B5076B",
+    "menu bar": "652b65",
+    "background": "1c1c1c",
+    "icons": "000",
+    "text": "fff",
+    "accent": "fff",
     "accent B": "FFD868",
 
     "toggle btn off": "0000",
@@ -14,9 +14,9 @@
     "action btn off": "5C2A9D00",
     "action btn on": "5C2A9D",
 
-    "note list bg": "5C2A9D",
+    "note list bg": "963896",
 
-    "input menus": "F1EBBB",
+    "input menus": "953a97",
     
     "":""
   }
