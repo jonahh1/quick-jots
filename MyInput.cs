@@ -86,7 +86,7 @@ class MyInput
     while (key > 0)
     {
       // NOTE: Only allow keys in range [32..125]
-      if ((key >= 32) && (key <= 125) && (str.Length < maxStrLen))
+      if ((key >= 32) && (key <= 125))
       {
         str = str.Insert(pointer+1, ""+(char)key);
         pointer++;
@@ -94,17 +94,27 @@ class MyInput
 
       key = Raylib.GetCharPressed();  // Check next character in the queue
     }
-
-    if (keyPressedThisFrame == (int)KeyboardKey.KEY_BACKSPACE && str.Length > 0)
+    bool ctrl = Raylib.IsKeyDown(KeyboardKey.KEY_LEFT_CONTROL) || Raylib.IsKeyDown(KeyboardKey.KEY_RIGHT_CONTROL);
+    if (keyPressedThisFrame == (int)KeyboardKey.KEY_BACKSPACE && str.Length > 0 && pointer>=0)
     {
       str = str.Remove(pointer,1);
       pointer--;
+    }
+    if (ctrl && Raylib.IsKeyPressed(KeyboardKey.KEY_V))
+    {
+      string pastedText = Clipboard.GetText();
+      if (pastedText == null) pastedText = "";
+      str = str.Insert(pointer+1, pastedText);
+      pointer+=pastedText.Length;
     }
     if (keyPressedThisFrame == (int)KeyboardKey.KEY_LEFT && pointer > -1) pointer--;
     if (keyPressedThisFrame == (int)KeyboardKey.KEY_RIGHT && pointer < str.Length-1) pointer++;
     if (keyPressedThisFrame == (int)KeyboardKey.KEY_UP) pointer=str.Length-1;
     if (keyPressedThisFrame == (int)KeyboardKey.KEY_DOWN) pointer=-1;
 
+    while (str.Length >= maxStrLen) str = str.Remove(str.Length-1,1);
+    
+    if (pointer > str.Length-1) pointer=str.Length-1;
     Draw.TextAnchored(str, new vec2(rec.x+5, rec.y+rec.h/2), Anchor.middleLeft, fontSize, env.theme.colors["text"]);
     vec2 pointerPos = Utils.TextSize(Window.font, new string(str.AsSpan(0, pointer+1)), fontSize);
 

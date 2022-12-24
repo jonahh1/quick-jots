@@ -2,6 +2,7 @@
 class NoteList
 {
   public static rect rec = rect.zero;
+  public static bool menuOpen = false;
   public static void DrawNoteList()
   {
     rec = new rect(0,0,300, env.window.h);
@@ -60,8 +61,12 @@ class NoteList
       rcMenu = true;
       selectingNote = false;
     }
-    RightClickMenu();
-    EditNoteMenu();
+    if (!MenuBarOptions.menuOpen)
+    {
+      RightClickMenu();
+      EditNoteMenu();
+    }
+    menuOpen = rcMenu || editNoteMenu;
   }
   public static Func<rect, float, rect> MenuLambda = (r, t) => new rect(r.x, r.y, t, r.h);
   public static int selectedNoteIndex = -1;
@@ -190,7 +195,11 @@ class NoteList
   static button editIconTab = new button() {changeRect = true, rectRule = EditMenuTabLambda};
   static button editTitleTab = new button() {changeRect = true, rectRule = EditMenuTabLambda};
   static button editBannerTab = new button() {changeRect = true, rectRule = EditMenuTabLambda};
-  
+  static button editFontTab = new button() {changeRect = true, rectRule = EditMenuTabLambda};
+    static button pickFontBtn = new button() {changeRect = false, rectRule = EditMenuTabLambda};
+    static List<string> fontPickerOptions = null;
+    static List<Font> fontPickerOptionsFonts = null;
+
   static int editMode = 1;
   static Note newNote = new Note();
   static int titlePointer = 0;
@@ -203,7 +212,7 @@ class NoteList
       return;
     }
     editMenuTimer = Math.Min(editMenuTimer+Raylib.GetFrameTime() * 5, 1);
-    vec2 size = new vec2(NoteList.rec.w + 48, 168);
+    vec2 size = new vec2(NoteList.rec.w + 48, 72+Window.iconSheet.height+24);
     rect rec = new rect((env.window.wh-size)/2, size.x, size.y);
 
     Draw.RectangleShadow(rec, Utils.LerpCol("0000","0006",editMenuTimer));
@@ -239,25 +248,32 @@ class NoteList
 
     #region tabs
       #region edit icon tab
-        editIconTab.rec = new rect(rec.x+rec.w-24, rec.y+36, 24);
+        editIconTab.rec = new rect(rec.x+rec.w-24, rec.y+24, 24);
         editIconTab.max = 24;
         if (Button.AnimatedAction(editIconTab).state) editMode = 0;
         Draw.Icon(MyIcons.iconsInCircle, editIconTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editIconTab.timer));
         Draw.TextAnchored("icon", new vec2(editIconTab.rec.x+30,editIconTab.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],editIconTab.timer));
       #endregion
       #region edit title tab
-        editTitleTab.rec = new rect(rec.x+rec.w-24, rec.y+60, 24);
+        editTitleTab.rec = new rect(rec.x+rec.w-24, rec.y+48, 24);
         editTitleTab.max = 24;
         if (Button.AnimatedAction(editTitleTab).state) editMode = 1;
-        Draw.Icon(MyIcons.AInCircle, editTitleTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editTitleTab.timer));
+        Draw.Icon(MyIcons.TInCircle, editTitleTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editTitleTab.timer));
         Draw.TextAnchored("title", new vec2(editTitleTab.rec.x+30,editTitleTab.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],editTitleTab.timer));
       #endregion
       #region edit banner tab
-        editBannerTab.rec = new rect(rec.x+rec.w-24, rec.y+84, 24);
+        editBannerTab.rec = new rect(rec.x+rec.w-24, rec.y+72, 24);
         editBannerTab.max = 24;
         if (Button.AnimatedAction(editBannerTab).state) editMode = 2;
         Draw.Icon(MyIcons.paintBucketInCircle, editBannerTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editBannerTab.timer));
         Draw.TextAnchored("banner color", new vec2(editBannerTab.rec.x+30,editBannerTab.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],editBannerTab.timer));
+      #endregion
+      #region edit font tab
+        editFontTab.rec = new rect(rec.x+rec.w-24, rec.y+96, 24);
+        editFontTab.max = 24;
+        if (Button.AnimatedAction(editFontTab).state) editMode = 3;
+        Draw.Icon(MyIcons.AInCircle, editFontTab.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],editFontTab.timer));
+        Draw.TextAnchored("font", new vec2(editFontTab.rec.x+30,editFontTab.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],editFontTab.timer));
       #endregion
     #endregion
    
@@ -280,13 +296,67 @@ class NoteList
     }
     else if (editMode == 1) // title
     {
-      
       MyInput.TextBox(new vec2(rec.x+12, rec.y+56), ref newNote.title, ref titlePointer, 30);
-      // text box -_-
     }
     else if (editMode == 2) // banner col
     {
       MyInput.TextBox(new vec2(rec.x+12, rec.y+56), ref newNote.bannerCol, ref bannerPointer, 9);
+      //if (newNote.bannerCol.Replace("#","").Length == 7) newNote.bannerCol += newNote.bannerCol.Substring(7,1);
+    }
+    else if (editMode == 3) // font
+    {
+      pickFontBtn.rec = new rect(rec.x+6,rec.y+30, 24);
+      pickFontBtn.max = 24;
+      if (Button.AnimatedAction(pickFontBtn).state)
+      {
+        fontPickerOptions = Dialogs.chooseFont();
+        if (fontPickerOptions != null)
+        {
+          fontPickerOptionsFonts = new List<Font>();
+          foreach (string path in fontPickerOptions)
+          {
+            fontPickerOptionsFonts.Add(Raylib.LoadFont(path));
+            Raylib.SetTextureFilter(fontPickerOptionsFonts.Last().texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
+          }
+        }
+      }
+      Draw.Icon(MyIcons.fntInFile, pickFontBtn.rec.xy, 0, Utils.LerpCol(env.theme.colors["icons"],env.theme.colors["accent"],pickFontBtn.timer));
+      Draw.TextAnchored("pick font", new vec2(pickFontBtn.rec.x+30,pickFontBtn.rec.y+12), Anchor.middleLeft, 18, Utils.LerpCol(env.theme.colors["accent"]+"00",env.theme.colors["accent"],pickFontBtn.timer));
+      string previewText = "preview font : AaBbYyZz";
+      Raylib.DrawTextEx(newNote.font, previewText, ~new vec2(rec.x-30+(rec.w-Utils.TextSize(newNote.font, previewText, 18, 1).x), rec.y+30+Window.menuBarHeight), 18, 1, Utils.HexToRGB(env.theme.colors["text"]));
+        
+      if (fontPickerOptions != null)
+      {
+        //fontPickerOptionsFonts = new List<Font>();
+        Draw.TextAnchored("options:", new vec2(rec.x+6,rec.y+60), Anchor.topLeft, 18, env.theme.colors["text"]);
+        float x = rec.x+6;
+        for (int i = 0; i < fontPickerOptionsFonts.Count; i++)
+        {
+          rect r = new rect(x, rec.y+84, 24,24);
+          if (Utils.MouseOnRec(r))
+          {
+            if (Input.IsLeftMouse(ClickMode.pressed))
+            {
+              newNote.fontPath = fontPickerOptions[i];
+              newNote.font = fontPickerOptionsFonts[i];
+            }
+            Draw.Rectangle(r,env.theme.colors["action btn on"]);
+          }
+          Draw.RectangleOutline(r, -1, false, env.theme.colors["accent"]);
+          //Raylib.SetTextureFilter(f.texture, TextureFilter.TEXTURE_FILTER_BILINEAR);
+          //Draw.TextAnchored("Aa", r.center, Anchor.middleCenter, 18, env.theme.colors["text"]);
+          Raylib.DrawTextEx(fontPickerOptionsFonts[i], "Aa", ~((r.center-(Utils.TextSize(fontPickerOptionsFonts[i], "Aa", 18, 1)/2)+new vec2(0,Window.menuBarHeight))), 18, 1, Utils.HexToRGB(env.theme.colors["text"]));
+          
+          //Raylib.UnloadFont(f);
+          x += 30;
+        }
+      }
+      else
+      {
+        Draw.TextAnchored("press the 'fnt file' button to pick a", new vec2(rec.x+6,rec.y+60), Anchor.topLeft, 18, env.theme.colors["text"]+"40");
+        Draw.TextAnchored("new font from the preinstalled ones", new vec2(rec.x+6,rec.y+78), Anchor.topLeft, 18, env.theme.colors["text"]+"40");
+      }
+      //MyInput.TextBox(new vec2(rec.x+12, rec.y+56), ref newNote.fontPath, ref fontPointer, 30);
       //if (newNote.bannerCol.Replace("#","").Length == 7) newNote.bannerCol += newNote.bannerCol.Substring(7,1);
     }
 
@@ -301,11 +371,15 @@ class NoteList
       Draw.Icon(newNote.icon, icon.xy, 0, env.theme.colors["icons"]);
       Draw.TextAnchored(newNote.title, new vec2(text.x + curvature, text.y + text.h/2), Anchor.middleLeft, 16, env.theme.colors["text"]);
     #endregion
-    if (accept) NoteManager.notes[selectedNoteIndex] = newNote;
+    if (accept)
+    {
+      NoteManager.notes[selectedNoteIndex] = newNote;
+    }
     if (cancel || accept)
     {
       editNoteMenu = false;
       editMode = 1;
+      fontPickerOptions = null;
     }
     //if (!Utils.MouseOnRec(rec) && Input.IsLeftMouse(ClickMode.pressed) && editMenuTimer >= 1) editNoteMenu = false;
   }

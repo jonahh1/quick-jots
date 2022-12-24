@@ -1,3 +1,10 @@
 {
+  "tabSize": 2,
+  "textMatchesBannerColor": false,
+  "fontSpacing": 2,
+  "currentCollection": "D:\\programing\\vscode\\quick-jots\\example-collection.qj",
+  "recentCollections": [
+    "D:\\programing\\vscode\\quick-jots\\example-collection.qj"
+  ],
   "theme": "dark"
 }
