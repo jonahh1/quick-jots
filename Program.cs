@@ -23,10 +23,13 @@ while (!Raylib.WindowShouldClose() && !Window.shouldClose)
     //NoteContentManager.DrawSelectedNote();
     if (NoteManager.notes.Count > 0) NoteContent.DrawNoteContent();
     NoteList.DrawNoteList();
+    WordIntellisense.DrawMenu();
     string title = Path.GetFileName(SettingsManager.profile.currentCollection);
     if (title == "") title = "*";
     title += " - quick-jots";
     Window.windowTitle = title;
+
+    //Draw.RectangleShadow(new rect(env.window.wh/2 - 50, 100), "fff");
     //MyInput.TextBox(env.window.wh/2, ref I, ref p, 32);
     
   #endregion

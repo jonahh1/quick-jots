@@ -195,40 +195,52 @@ class NoteContent
     int iy=0; // index x & y
     float x=0,y=0; // real x & y
     vec2 startPos = new vec2(rec.x+buffer, rec.y+buffer*5);
-    float charW = 2;
+    //Dictionary<int, vec2> charPositions = new Dictionary<int, vec2>();
+    Dictionary<float, Dictionary<float, int>> charPositionTree = new Dictionary<float, Dictionary<float, int>>();
+    // y: {(x,i), (x,i), (x,i)...}
     for (int i = 0; i < content.Length; i++)
     {
       y = startPos.y+iy*fontSize;
       vec2 pos = new vec2( startPos.x + x, y);
+      if (x == 0)
+      {
+        charPositionTree.TryAdd(y+fontSize/2, new Dictionary<float, int>());
+        charPositionTree.Last().Value.Add(pos.x, i);
+      }
       if (content[i] == '\n')
       {
+        //charPositionTree.TryAdd(y+fontSize/2, new Dictionary<float, int>());
+        charPositionTree.Last().Value.TryAdd(pos.x, i);
         iy++;
         x=0;
-        charW = 2;
       }
       else if (content[i] == '\t')
       {
+        float advanceX = 0;
         unsafe
         {
           int index = Raylib.GetGlyphIndex(font, content[i]);
           GlyphInfo glyph = font.glyphs[index];
 
-          x += (glyph.advanceX*((float)fontSize/font.baseSize) + spacing)*SettingsManager.profile.tabSize;
+          advanceX = glyph.advanceX*((float)fontSize/font.baseSize) + spacing;
+          x += advanceX;
         }
+        if (!charPositionTree.Last().Value.ContainsKey(pos.x)) charPositionTree.Last().Value.TryAdd(pos.x - advanceX/4, i);
       }
       else if (content[i] != '\0')
       {
         string col = env.theme.colors["text"];
         if (SettingsManager.profile.textMatchesBannerColor) col = note.bannerCol;
         Draw.Codepoint((int)content[i], font, pos, fontSize, col);
-        
+        float advanceX = 0;
         unsafe
         {
           int index = Raylib.GetGlyphIndex(font, content[i]);
           GlyphInfo glyph = font.glyphs[index];
-
-          x += glyph.advanceX*((float)fontSize/font.baseSize) + spacing;
+          advanceX = glyph.advanceX*((float)fontSize/font.baseSize) + spacing;
+          x += advanceX;
         }
+        if (!charPositionTree.Last().Value.ContainsKey(pos.x)) charPositionTree.Last().Value.TryAdd(pos.x - advanceX/4, i);
       }
       if (i == rawPointer)
       {
@@ -237,12 +249,55 @@ class NoteContent
         Draw.Rectangle(new rect(new vec2(xPos,pos.y),1,fontSize), env.theme.colors["accent"]);
       }
     }
+    // move mouse pointer to where the user clicked
+    if (Utils.MouseOnRec(rec) && ((Input.IsLeftMouse(ClickMode.pressed) && !WordIntellisense.menuOpen) || Input.IsRightMouse(ClickMode.pressed)))
+    {
+      float closestYToMouse = MathF.Abs(charPositionTree.First().Key-env.mousePos.y);
+      var closestXTree = charPositionTree.First().Value;
+      foreach (var item in charPositionTree)
+      {
+        float d = MathF.Abs(item.Key-env.mousePos.y);
+        if (d < closestYToMouse)
+        {
+          closestYToMouse = d;
+          closestXTree = item.Value;
+        }
+        //foreach (var itemX in item.Value) Draw.Circle(itemX.Key,item.Key,3,"fff8");
+      }
+      float closestXToMouse = MathF.Abs(closestXTree.First().Key-env.mousePos.x);
+      int closestCharIndexToMouse = closestXTree.First().Value;
+      foreach (var item in closestXTree)
+      {
+        float d = MathF.Abs(item.Key-env.mousePos.x);
+        if (d < closestXToMouse)
+        {
+          closestXToMouse = d;
+          closestCharIndexToMouse = item.Value;
+        }
+      }
+      rawPointer = closestCharIndexToMouse;
+      Console.WriteLine(closestCharIndexToMouse);
+    }
+    if (Utils.MouseOnRec(rec) && Input.IsRightMouse(ClickMode.pressed))
+    {
+      //Draw.Rectangle(new rect(env.mousePos, 100), "fff");
+      WordIntellisense.menuOpen = true;
+      WordIntellisense.menuPos = env.mousePos;
+
+      string limitChars = "\n .,!?";
+      int startOfWord = 0;
+      int endOfWord = rawPointer;
+      for (int i = rawPointer; i >= 0; i--)
+        if (limitChars.Contains(content[i])) { startOfWord = i+1; break;}
+      for (int i = rawPointer; i < content.Length; i++)
+        if (limitChars.Contains(content[i])) { endOfWord = i; break;}
+
+      WordIntellisense.word = content.AsSpan(startOfWord, endOfWord-startOfWord).ToString().ToLower();
+      WordIntellisense.GetDictionaryAPIResponse();
+    }
     note = NoteManager.notes[selectedNoteIndex];
     note.pointer = rawPointer;
     NoteManager.notes[selectedNoteIndex] = note;
   }
+  static float distToMouse(vec2 v) => MathF.Sqrt((v.x-env.mousePos.x)*(v.x-env.mousePos.x) + (v.y-env.mousePos.y)*(v.y-env.mousePos.y));
 }
-/*
-fgfg
-fgf
-*/

@@ -61,7 +61,7 @@ class NoteList
       rcMenu = true;
       selectingNote = false;
     }
-    if (!MenuBarOptions.menuOpen)
+    if (!MenuBarOptions.menuOpen && Utils.MouseOnRec(rec))
     {
       RightClickMenu();
       EditNoteMenu();
